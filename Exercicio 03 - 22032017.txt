@@ -1,0 +1,13 @@
+Algoritmo PreencheVetor
+ 
+ Entrada:
+  Vetor, elemento, tamanho, i
+  
+  Para i=0 até tamanho-1 faça:
+    Se (Vetor[i]==elemento):
+      return i
+    Senão:
+      return -1
+    Fim-se
+ Final Algoritmo 
+  
