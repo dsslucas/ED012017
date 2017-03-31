@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void IniciaPilha ()
+
+int main(){
+  int Valores[10];
+  int i;
+  for (i=0; i<10; i++){
+    printf("Valor %d: ", i+1);
+    scanf("%d", &Valores[10]);
+  }
+}
