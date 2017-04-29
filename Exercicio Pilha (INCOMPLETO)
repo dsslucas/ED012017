@@ -1,13 +1,45 @@
 #include <stdio.h>
-#include <stdlib.h>
 
-void IniciaPilha ()
+int CapacidadePilha=10;
+
+struct Pilha{
+    int Topo;
+    float *Elemento;
+    int prox;
+};
+
+void InicioPilha (struct Pilha *p, int CaPilha){
+    p->Topo= -1;
+    p->Elemento= (float*)malloc(sizeof(float));
+    p->prox= CaPilha;
+}
+
+void Push(struct Pilha *p, float NumeroMain){
+    p->Topo++;
+    p->Elemento [p->Topo] = NumeroMain;
+}
+
+void ListaPilha(struct Pilha *p){
+    for(int X = 0; X < p->Topo + 1; X++) {
+        printf("%.1f\n|", p->Elemento[X]);
+    }
+}
 
 int main(){
-  int Valores[10];
-  int i;
-  for (i=0; i<10; i++){
-    printf("Valor %d: ", i+1);
-    scanf("%d", &Valores[10]);
-  }
+    struct Pilha pilha;
+    int i;
+    int Aux;
+    float Numero;
+    InicioPilha(&pilha, CapacidadePilha);
+    printf("Empilhe dez valores. Informe os valores: \n");
+    for(i=0; i<CapacidadePilha; i++){
+        printf("Valor %d: ", i+1);
+        scanf("%f", &Numero);
+        Push(&pilha, Numero);
+    }
+    printf("Valores da pilha: ");
+    ListaPilha(&pilha);
+
 }
+
+
