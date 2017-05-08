@@ -14,7 +14,9 @@ void InicioPilha (struct Pilha *p, int CaPilha){
     p->prox= CaPilha;
 }
 
-void Push(struct Pilha *p, float NumeroMain){
+void Push(struct Pilha *p){
+    float NumeroMain;
+    scanf("%f", &Numero);
     p->Topo++;
     p->Elemento [p->Topo] = NumeroMain;
 }
@@ -29,13 +31,11 @@ int main(){
     struct Pilha pilha;
     int i;
     int Aux;
-    float Numero;
     InicioPilha(&pilha, CapacidadePilha);
     printf("Empilhe dez valores. Informe os valores: \n");
     for(i=0; i<CapacidadePilha; i++){
         printf("Valor %d: ", i+1);
-        scanf("%f", &Numero);
-        Push(&pilha, Numero);
+        Push(&pilha);
     }
     printf("Valores da pilha: ");
     ListaPilha(&pilha);
