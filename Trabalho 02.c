@@ -3,13 +3,13 @@ Instituto de Ciencias Exatas
 Departamento de Ciencia da Computacao
 Algoritmos e Programação de Computadores – 1/2017
 
-Alunos: Lucas da Silva Souza, Gustavo Costa 
-Matriculas: 16/0013020, (MATRICULA A CONFIRMAR)
+Alunos: Lucas da Silva Souza, Gustavo Costa de Souza
+Matriculas: 16/0013020, 15/0128576
 Turma: B
 Versão do compilador: GCC 4.7.1
 
-Descricao: Trabalho Obrigatorio 01.
-Jogo de Batalha Naval entre dois players. */
+Descricao: Trabalho Obrigatorio 02.
+Simulação de uma agenda telefônica. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -159,23 +159,22 @@ void OrdenarLista(int Modo) {
 
 void Intro() {
     if(Iniciado == 0) {
-       // Carregar();
-
-        printf("Seja bem vindo a agenda telefonica 2000! Selecione uma opcao abaixo.");
+        printf("\nSelecione uma opcao abaixo.");
         printf("\n1 - Listar Contatos");
         printf("\n2 - Adicionar Contato");
         printf("\n3 - Editar Contato");
         printf("\n4 - Remover Contato");
-        printf("\n5 - Ordenar Lista\n\n");
+        printf("\n5 - Ordenar Lista");
+        printf("\n6 - Sair do programa\n");
     }
-    Iniciado = 1;
 }
 
 int main() {
-    Intro();
-
+    printf("Seja bem vindo a agenda telefonica 2000!\n");
     while(1 == 1) {
         int Selecao = 0;
+        Intro();
+        printf("\nEscolha uma opcao: ");
         scanf("%d", &Selecao);
 
         if(Selecao == 1)
@@ -200,12 +199,10 @@ int main() {
                     aux = 1;
                 }
             }
-
             if(aux == 1) {
                 printf("\nEste numero ja foi encontrado em sua agenda, por favor use a funcao de editar contatos caso queira modifica-lo.");
                 continue;
             }
-
             strtok(Nome, "\n");
             strtok(Endereco, "\n");
             AdicionarContato(Nome, Endereco, Num, 0);
@@ -220,12 +217,10 @@ int main() {
             getchar();
             printf("Insira o numero telefonico de quem deseja modificar: ");
             scanf("%d", &base);
-
             int aux = 0;
             for(int X=0; X < numContatos; X++) {
                 if(Contatos[X].Numero == base) {
                     aux = 1;
-
                     getchar();
                     printf("Insira um novo nome: ");
                     fgets (&Nome, 30, stdin);
@@ -233,13 +228,11 @@ int main() {
                     fgets (&Endereco, 30, stdin);
                     printf("Insira um novo numero: ");
                     scanf("%d", &Num);
-
                     strtok(Nome, "\n");
                     strtok(Endereco, "\n");
                     ModificarContato(X, Nome, Endereco, Num);
                 }
             }
-
             if(aux == 0) {
                 printf("\nEste numero nao foi encontrado em sua agenda, retornando ao menu principal.");
             }
@@ -282,14 +275,18 @@ int main() {
             OrdenarLista(1);
             printf("Lista organizada com base nos numeros dos contatos.\n\n");
         }
-
+        else if(Selecao == 6){
+            printf("Saindo do programa.\n");
+            return 0;
+        }
         else {
             printf("Desculpe, voce digitou uma opcao invalida. Opcoes:");
             printf("\n1 - Listar Contatos");
             printf("\n2 - Adicionar Contato");
             printf("\n3 - Editar Contato");
             printf("\n4 - Remover Contato");
-            printf("\n5 - Ordenar Lista\n\n");
+            printf("\n5 - Ordenar Lista");
+            printf("\n6 - Sair do programa\n");
         }
     }
 }
