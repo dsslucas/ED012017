@@ -13,280 +13,304 @@ Simulação de uma agenda telefônica. */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-/*Funções de salvamento e carregamento de dados
-    Carregar()
-    Salvar()*/
-
-FILE* fp;
-
-struct Contato {
-    char Nome[30];
-    char Endereco[30];
-    int Numero;
-    int nulo;
+struct No{ //Struct dos nós de uma lista
+	char Nome[30];
+	char Endereco[30];
+	int Numero;
+    int aux; //Usada somente para organizar a lista.
+	struct No *prox;
 };
-struct Contato Contatos[500];
-int numContatos = 0;
-int Iniciado = 0;
 
-void Salvar() {
-    fp = fopen("lista.txt", "w+");
-    int i = 0;
+typedef struct No no;
+int Contagem;
+int Escolha(void);
+int selecionarOpcao(no *entrada, int op);
+void EditarContato(no *entrada);
+void RemoverContato(no *entrada);
+void AdicionarContato(no *entrada);
+void ListarContatos(no *entrada);
+void OrganizarLista(no* entrada);
 
-    for(i=0; i <= numContatos; i++){
-        fprintf(fp,"nome%d:%s\n", i, Contatos[i].Nome);
-        fprintf(fp,"endereco%d:%s\n", i, Contatos[i].Endereco);
-        fprintf(fp,"numero%d:%d\n", i, Contatos[i].Numero);
-    }
-    fclose(fp);
-}
-
-void Carregar() {
-    fp = fopen("lista.txt", "r+");
-    int iEndereco = 0;
-    int iNumero = 0;
-    int iNome = 0;
-    char line[256];
-    char* lixo;
-
-    while (fgets(line, sizeof(line), fp)) {
-        if(strncmp(line, "nome", 4) == 0) {
-            const char* linha_aux = line;
-            while (*linha_aux != ':') {
-                linha_aux++;
-            }
-            linha_aux++;
-
-            printf("%s", linha_aux);
-            strcpy(Contatos[iNome].Nome, linha_aux);
-            iNome = iNome + 1;
-        }
-        else if(strncmp(line, "endereco", 8) == 0) {
-            const char* linha_aux = line;
-            while (*linha_aux != ':') {
-                linha_aux++;
-            }
-            linha_aux++;
-
-            printf("%s", linha_aux);
-            strcpy(Contatos[iEndereco].Endereco, linha_aux);
-            iEndereco = iEndereco + 1;
-        }
-        else if(strncmp(line, "numero", 6) == 0) {
-            const char* linha_aux = line;
-            while (*linha_aux != ':') {
-                linha_aux++;
-            }
-            linha_aux++;
-
-            printf("%s", linha_aux);
-            Contatos[iNumero].Numero = (int)strtof(linha_aux, &lixo);
-            iNumero = iNumero + 1;
+int* TransformarString(char* entrada) {
+    char chave[53] = " AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz";
+    int X, Y;
+    int* retorno = malloc(strlen(entrada) * sizeof(*retorno));
+    for(X = 0; X < strlen(entrada); X++) {
+        for(Y = 0; Y < strlen(chave); Y++) {
+            if(entrada[X] == chave[Y])
+                retorno[X] = Y;
         }
     }
+    return retorno;
 }
 
-void ListarContatos() {
-    printf("\nAtualmente voce possui %d contatos", numContatos);
-    printf("\nListagem:");
-    for(int X = 0; X < numContatos; X++) {
-        printf("\n\tNome: %s\n\tNumero: %d\n\tEndereco: %s\n", Contatos[X].Nome, Contatos[X].Numero, Contatos[X].Endereco);
+int JaExistente(no *entrada, int Numero) {
+    no* tmp = entrada;
+    while(tmp != NULL) {
+        if(tmp->Numero == Numero)
+            return 1;
+        tmp = tmp->prox;
     }
+    return 0;
 }
 
-void AjustarLista(int Modificado) { //Função responsável por reorganizar a lista de tal forma que contatos novos tenham espaço para serem adicionados.
-    for(int X = Modificado; X < numContatos; X++) {
-        Contatos[X] = Contatos[X+1];
+void AdicionarLista(no *entrada, char* Nome, char* Endereco, int Numero, int aux){
+	no *novo= (no *) malloc(sizeof(no));
+	strcpy(novo->Nome, Nome);
+	strcpy(novo->Endereco, Endereco);
+	novo->Numero = Numero;
+	novo->prox = NULL;
+    if(aux == 1)
+        novo->aux = 1;
+	if(JaExistente(entrada, Numero) == 1)
+        return;
+	if(vazia(entrada))
+		entrada->prox=novo;
+	else{
+		no *tmp = entrada->prox;
+		while(tmp->prox != NULL)
+			tmp = tmp->prox;
+		tmp->prox = novo;
+	}
+}
+
+no* CompararNos(no* No1, no* No2) { //Esta função irá retornar a string que em uma lista alfabética ficaria no final.
+    char String1[30], String2[30];
+    strcpy(String1, No1->Nome);
+    strcpy(String2, No2->Nome);
+    int* _string1 = TransformarString(String1);
+    int* _string2 = TransformarString(String2);
+    int i;
+    int max = strlen(String1) > strlen(String1) ? strlen(String1) : strlen(String2);
+
+    for(i = 0; i < max; i++) {
+        if(_string1[i] > _string2[i])
+            return No2;
+        else if(_string1[i] < _string2[i])
+            return No1;
     }
-    numContatos--;
-    Salvar();
+    return No2;
 }
 
-void ModificarContato(int X, char* Nome, char* Endereco, int Numero) {
-    strcpy(Contatos[X].Nome, Nome);
-    strcpy(Contatos[X].Endereco, Endereco);
-    Contatos[X].Numero = Numero;
-    printf("\nO contato de numero %d foi modificado com sucesso.", Contatos[X].Numero);
-    Salvar();
-}
-
-void AdicionarContato(char* Nome, char* Endereco, int Numero, int Invisivel) {
-    strcpy(Contatos[numContatos].Nome, Nome);
-    strcpy(Contatos[numContatos].Endereco, Endereco);
-    Contatos[numContatos].nulo = 0;
-    Contatos[numContatos].Numero = Numero;
-    if(Invisivel != 1)
-        printf("\nO contato de numero %d foi adicionado com sucesso.\n", Contatos[numContatos].Numero);
-
-    numContatos++;
-    Salvar();
-}
-
-void OrdenarLista(int Modo) {
-    if(Modo == 1) {
-        int aux = 0;
-        int _numContatos = numContatos;
-        struct Contato lista[500];
-
-        while(aux < _numContatos) {
-            int menorNumero = -1;
-            int menorNumeroID = -1;
-            for(int X = 0; X < numContatos; X++) {
-                if(Contatos[X].Numero < menorNumero || menorNumero == -1) {
-                    menorNumero = Contatos[X].Numero;
-                    menorNumeroID = X;
-                }
-            }
-
-            strcpy(lista[aux].Nome, Contatos[menorNumeroID].Nome);
-            strcpy(lista[aux].Endereco, Contatos[menorNumeroID].Endereco);
-            lista[aux].Numero = Contatos[menorNumeroID].Numero;
-
-            aux++;
-            AjustarLista(menorNumeroID);
-        }
-
-        for(int X = 0; X < _numContatos; X++) {
-            AdicionarContato(lista[X].Nome, lista[X].Endereco, lista[X].Numero, 1);
-            /*strcpy(Contatos[X].Nome, lista[X].Nome);
-            strcpy(Contatos[X].Endereco, lista[X].Endereco);
-            Contatos[X].Numero = lista[X].Numero;*/
-        }
-    }
-    Salvar();
-}
-
-void Intro() {
-    if(Iniciado == 0) {
-        printf("\nSelecione uma opcao abaixo.");
-        printf("\n1 - Listar Contatos");
-        printf("\n2 - Adicionar Contato");
-        printf("\n3 - Editar Contato");
-        printf("\n4 - Remover Contato");
-        printf("\n5 - Ordenar Lista");
-        printf("\n6 - Sair do programa\n");
-    }
-}
-
-int main() {
-    printf("Seja bem vindo a agenda telefonica 2000!\n");
-    while(1 == 1) {
-        int Selecao = 0;
-        Intro();
-        printf("\nEscolha uma opcao: ");
-        scanf("%d", &Selecao);
-
-        if(Selecao == 1)
-            ListarContatos();
-
-        else if(Selecao == 2) {
-            char Nome[30];
-            char Endereco[30];
-            int Num = 0;
-
-            getchar();
-            printf("Nome: ");
-            fgets (&Nome, 30, stdin);
-            printf("Endereco: ");
-            fgets (&Endereco, 30, stdin);
-            printf("Numero: ");
-            scanf("%d", &Num);
-
-            int aux = 0;
-            for(int X=0; X < numContatos; X++) {
-                if(Contatos[X].Numero == Num) {
-                    aux = 1;
-                }
-            }
-            if(aux == 1) {
-                printf("\nEste numero ja foi encontrado em sua agenda, por favor use a funcao de editar contatos caso queira modifica-lo.");
-                continue;
-            }
-            strtok(Nome, "\n");
-            strtok(Endereco, "\n");
-            AdicionarContato(Nome, Endereco, Num, 0);
-        }
-
-        else if(Selecao == 3) {
-            char Nome[30];
-            char Endereco[30];
-            int Num = 0;
-            int base = 0;
-
-            getchar();
-            printf("Insira o numero telefonico de quem deseja modificar: ");
-            scanf("%d", &base);
-            int aux = 0;
-            for(int X=0; X < numContatos; X++) {
-                if(Contatos[X].Numero == base) {
-                    aux = 1;
-                    getchar();
-                    printf("Insira um novo nome: ");
-                    fgets (&Nome, 30, stdin);
-                    printf("Insira um novo endereco: ");
-                    fgets (&Endereco, 30, stdin);
-                    printf("Insira um novo numero: ");
-                    scanf("%d", &Num);
-                    strtok(Nome, "\n");
-                    strtok(Endereco, "\n");
-                    ModificarContato(X, Nome, Endereco, Num);
-                }
-            }
-            if(aux == 0) {
-                printf("\nEste numero nao foi encontrado em sua agenda, retornando ao menu principal.");
-            }
-        }
-
-        else if(Selecao == 4) {
-            char Nome[30];
-            char Endereco[30];
-            int Num = 0;
-            int base = 0;
-
-            getchar();
-            printf("Insira o numero telefonico de quem deseja remover: ");
-            scanf("%d", &base);
-
-            int aux = 0;
-            for(int X=0; X < numContatos; X++) {
-                if(Contatos[X].Numero == base) {
-                    aux = 1;
-                    int resposta = 0;
-
-                    while(resposta != 1 && resposta != 2) {
-                        printf("\nDeseja realmente remover %s de sua lista? Digite [1] para sim ou [2] para não.\nSua resposta: ", Contatos[X].Nome);
-                        scanf("%d", &resposta);
-
-                        if(resposta == 1)
-                            AjustarLista(X);
-                        else if(resposta == 2)
-                            break;
-                    }
-                }
-            }
-
-            if(aux == 0) {
-                printf("\nEste numero nao foi encontrado em sua agenda, retornando ao menu principal.");
-            }
-        }
-
-        else if(Selecao == 5) {
-            OrdenarLista(1);
-            printf("Lista organizada com base nos numeros dos contatos.\n\n");
-        }
-        else if(Selecao == 6){
-            printf("Saindo do programa.\n");
+int main(void){
+    no *lista = (no *) malloc(sizeof(no)); //Criação do nó principal, será usado em todas as funções.
+	Contagem=0;
+	int iOpcao;
+	printf("Bem vindo a Agenda Telefonica 2000!\n");
+	printf("Eis algumas funcoes desta agenda:\n");
+	printf("\t- Listagem de contatos (em ordem numerica);\n\t- Adicao, Edicao e Remocao de contatos;\n\t- Funcao para organizar os contatos por ordem alfabetica.\n");
+	printf("\t- Use a vontade e venha de zap voce tambem!\n\n");
+	while(iOpcao) {
+		iOpcao=Escolha();
+		if(selecionarOpcao(lista,iOpcao) == 0)
             return 0;
+	}
+
+	return 0;
+}
+
+int Escolha(void){
+	int aux;
+	printf("Escolha uma opcao\n");
+	printf("0. Sair\n");
+	printf("1. Listar contatos (em ordem numerica)\n");
+	printf("2. Adicionar contato\n");
+	printf("3. Remover contato\n");
+	printf("4. Editar contato\n");
+	printf("5. Organizar e Imprimir Lista (em ordem alfabetica)\n");
+	printf("Opcao: "); scanf("%d", &aux);
+    printf("\n");
+	return aux;
+}
+
+int selecionarOpcao(no *entrada, int op){
+	no *tmp;
+	switch(op){
+		case 0:
+			return 0;
+		case 1:
+			ListarContatos(entrada);
+			break;
+		case 2:
+			AdicionarContato(entrada);
+			break;
+        case 3:
+            RemoverContato(entrada);
+            break;
+        case 4:
+            EditarContato(entrada);
+            break;
+        case 5:
+            OrganizarLista(entrada);
+            break;
+		default:
+			printf("Comando invalido\n");
+	}
+	printf("\n");
+	return 1;
+}
+
+int vazia(no *entrada){
+	if(entrada->prox == NULL)
+		return 1;
+	else
+		return 0;
+}
+
+no * swapAdjacent(no * list) {
+   if (!list) return NULL;
+   if (!list->prox) return list;
+
+   no *newHead = list->prox;
+   list->prox = swapAdjacent(newHead->prox);
+   newHead->prox = list;
+   return newHead;
+}
+
+void InverterPointers( no **p, no **pt){
+    int *pp;
+    pp = *p;
+    *p = *pt;
+    *pt= pp;
+}
+
+void OrganizarLista(no* entrada) {
+    no* ordenada = (no *) malloc(sizeof(no));
+    ordenada->prox = NULL;
+    no* temp = entrada;
+    no* menorNo = NULL;
+    while(1 == 1) {
+        while(temp != NULL) {
+            temp = temp->prox;
+            if(temp != NULL) {
+                if(JaExistente(ordenada, temp->Numero) == 1)
+                    continue;
+                if(temp->prox != NULL && menorNo == NULL) {
+                    if(JaExistente(ordenada, temp->prox->Numero) == 1) {
+                        menorNo = temp;
+                        continue;
+                    }
+                    if(menorNo == NULL)
+                        menorNo = CompararNos(temp, temp->prox);
+                }
+                else if(menorNo != NULL) {
+                    menorNo = CompararNos(menorNo, temp);
+                }
+            }
+        }
+        if(menorNo != NULL) {
+            AdicionarLista(ordenada, menorNo->Nome, menorNo->Endereco, menorNo->Numero, 1);
+            temp = entrada;
+            menorNo = NULL;
         }
         else {
-            printf("Desculpe, voce digitou uma opcao invalida. Opcoes:");
-            printf("\n1 - Listar Contatos");
-            printf("\n2 - Adicionar Contato");
-            printf("\n3 - Editar Contato");
-            printf("\n4 - Remover Contato");
-            printf("\n5 - Ordenar Lista");
-            printf("\n6 - Sair do programa\n");
+            temp = entrada;
+            while(temp != NULL) {
+                if(JaExistente(ordenada, temp->Numero) == 0)
+                    AdicionarLista(ordenada, temp->Nome, temp->Endereco, temp->Numero, 1);
+                temp = temp->prox;
+            }
+            break;
         }
     }
+    printf("\nLista organizada em ordem alfabetica:\n");
+    temp = ordenada->prox;
+    while(temp != NULL) {
+        printf("\t%s - %s - %d\n", temp->Nome, temp->Endereco, temp->Numero);
+        temp = temp->prox;
+    }
 }
+
+void EditarContato(no *entrada) {
+    int Num = 0, encontrado = 0;
+    char Nome[30], Endereco[30];
+	int Numero = 0;
+    printf("Numero que deseja editar: "); scanf("%d", &Num);
+    no* aux = entrada;
+    no* anterior;
+    while( aux != NULL){
+		if(aux != NULL && aux->Numero == Num) {
+            encontrado = 1;
+            int opt = 0;
+            printf("Estamos editando a pessoa de nome %s, caso deseje continuar digite 1, caso nao deseje digite 0.\nOpcao: ", aux->Nome); scanf("%d", &opt);
+            if(opt == 0)
+                printf("Cancelando remocao.");
+            else {
+                getchar();
+                printf("Novo nome: "); fgets (&aux->Nome, 30, stdin);
+                printf("Novo endereco: "); fgets (&aux->Endereco, 30, stdin);
+                printf("Novo numero: "); scanf("%d", &aux->Numero);
+                strtok(&aux->Nome, "\n");
+                strtok(&aux->Endereco, "\n");
+            }
+            break;
+		}
+        aux = aux->prox;
+	}
+	if(encontrado == 0)
+        printf("Desculpe, este numero nao foi encontrado em seus contatos.\n\n");
+}
+
+void RemoverContato(no *entrada){
+    int Num = 0, encontrado = 0;
+    printf("Numero que deseja remover: "); scanf("%d", &Num);
+
+    no* aux = entrada;
+    no* anterior;
+    while( aux != NULL){
+        anterior = aux;
+        aux = aux->prox;
+		if(aux != NULL && aux->Numero == Num) {
+            encontrado = 1;
+            anterior->prox = aux->prox;
+            break;
+		}
+	}
+	if(encontrado == 0)
+        printf("Desculpe, este numero nao foi encontrado em seus contatos.\n\n");
+}
+
+void AdicionarContato(no *entrada){
+	no *novo= (no *) malloc(sizeof(no));
+	getchar();
+
+	char Nome[30], Endereco[30];
+	int Num = 0;
+
+    printf("Nome: "); fgets (Nome, 30, stdin);
+    printf("Endereco: "); fgets (Endereco, 30, stdin);
+    printf("Numero: "); scanf("%d", &Num);
+
+    strtok(Nome, "\n");
+    strtok(Endereco, "\n");
+
+    if(Num < 0) {
+        printf("O numero nao pode ser negativo! Retornando ao menu...");
+        return;
+    }
+
+    if(JaExistente(entrada, Num)) {
+        printf("Este numero ja existe em sua lista!");
+        return;
+    }
+    AdicionarLista(entrada, Nome, Endereco, Num, 1);
+	Contagem++;
+}
+
+void ListarContatos(no *entrada){
+	if(vazia(entrada)){
+		printf("Erro! Voce nao possui nenhum contato.\n\n");
+		return ;
+	}
+	no *aux;
+	aux = entrada->prox;
+	printf("Lista:");
+	while( aux != NULL){
+		printf("\n\tNumero %d - %s - %s", aux->Numero, aux->Nome, aux->Endereco);
+		aux = aux->prox;
+	}
+	printf("\n\n");
+}
+
